@@ -6,6 +6,7 @@ using System.Net;
 using System.Threading;
 using System.Linq;
 using System.Text;
+using UnityEngine.Events;
 
 
 public class WebServer : MonoBehaviour
@@ -15,6 +16,18 @@ public class WebServer : MonoBehaviour
     bool ready;
     HttpListenerRequest lastRequest;
     HttpListenerContext ctx;
+
+    [System.Serializable]
+    public class ManagedRequest
+    {
+        [System.Serializable]
+        public class MyEvent : UnityEvent<string[]> { }
+
+        public string name;
+        public MyEvent prova;
+        public Func<string[], string> responseFunction;
+    }
+    public ManagedRequest[] managedRequests;
 
     public void Start()
     {
@@ -49,13 +62,7 @@ public class WebServer : MonoBehaviour
             ctx.Response.OutputStream.Close();
             ready = false;
         }
-    }
-
-    // Method to override
-    public virtual string Respond (HttpListenerRequest request)
-    {
-        return "";
-    }
+    }    
 
     public void Run()
     {
@@ -95,5 +102,28 @@ public class WebServer : MonoBehaviour
     {
         listener.Stop();
         listener.Close();
+    }
+
+    // You can override this method
+    public virtual string Respond(HttpListenerRequest request)
+    {
+        string name = request.Url.LocalPath;
+        string[] args = new string[] { };
+
+        if (name.Contains(":"))
+        {
+            name = request.Url.LocalPath.Split(':')[0];
+            args = request.Url.LocalPath.Split(':')[1].Split('&');
+        }
+
+        Debug.Log("Path: " + name);
+        Debug.Log("Arguments: " + args.ToString());
+
+        foreach (ManagedRequest mr in managedRequests)
+        {
+            if (mr.name == name)
+                return mr.responseFunction.Invoke(args);
+        }
+        return string.Format("<!DOCTYPE html> <html> <head> <title>Unity Webserver</title> </head> <body> <h1>Hello from your Unity project</h1> <p>Have fun!</p> </body> </html>");
     }
 }

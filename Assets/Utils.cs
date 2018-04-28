@@ -12,4 +12,9 @@ public class Utils : MonoBehaviour
             Debug.LogWarning("Target object not found");
         return ("Target object not found");
     }
+
+    public void prova ()
+    {
+        Debug.Log("Ciao");
+    }
 }
