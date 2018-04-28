@@ -12,6 +12,9 @@ public class WebServer : MonoBehaviour
 {
     HttpListener listener;
     public string socketAddress;
+    bool ready;
+    HttpListenerRequest lastRequest;
+    HttpListenerContext ctx;
 
     public void Start()
     {
@@ -33,6 +36,21 @@ public class WebServer : MonoBehaviour
         Debug.Log("Started server on " + socketAddress.ToString());
     }
 
+    public void Update()
+    {
+        if (ready)
+        {
+            string rstr = Respond(ctx.Request);
+            byte[] buf = Encoding.UTF8.GetBytes(rstr);
+            ctx.Response.ContentLength64 = buf.Length;
+            ctx.Response.AppendHeader("Access-Control-Allow-Origin", "*");
+            ctx.Response.OutputStream.Write(buf, 0, buf.Length);
+
+            ctx.Response.OutputStream.Close();
+            ready = false;
+        }
+    }
+
     // Method to override
     public virtual string Respond (HttpListenerRequest request)
     {
@@ -50,20 +68,21 @@ public class WebServer : MonoBehaviour
                 {
                     ThreadPool.QueueUserWorkItem((c) =>
                     {
-                        var ctx = c as HttpListenerContext;
+                        ctx = c as HttpListenerContext;
+                        ready = true;
                         try
                         {
-                            string rstr = Respond(ctx.Request);
-                            byte[] buf = Encoding.UTF8.GetBytes(rstr);
-                            ctx.Response.ContentLength64 = buf.Length;
-                            ctx.Response.AppendHeader("Access-Control-Allow-Origin", "*");
-                            ctx.Response.OutputStream.Write(buf, 0, buf.Length);
+                            //string rstr = Respond(ctx.Request);
+                            //byte[] buf = Encoding.UTF8.GetBytes(rstr);
+                            //ctx.Response.ContentLength64 = buf.Length;
+                            //ctx.Response.AppendHeader("Access-Control-Allow-Origin", "*");
+                            //ctx.Response.OutputStream.Write(buf, 0, buf.Length);
                         }
                         catch { } // suppress any exceptions
                             finally
                         {
                                 // always close the stream
-                                ctx.Response.OutputStream.Close();
+                                //ctx.Response.OutputStream.Close();
                         }
                     }, listener.GetContext());
                 }
