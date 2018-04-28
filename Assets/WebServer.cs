@@ -17,18 +17,6 @@ public class WebServer : MonoBehaviour
     HttpListenerRequest lastRequest;
     HttpListenerContext ctx;
 
-    [System.Serializable]
-    public class ManagedRequest
-    {
-        [System.Serializable]
-        public class MyEvent : UnityEvent<string[]> { }
-
-        public string name;
-        public MyEvent prova;
-        public Func<string[], string> responseFunction;
-    }
-    public ManagedRequest[] managedRequests;
-
     public void Start()
     {
         listener = new HttpListener();
@@ -107,23 +95,6 @@ public class WebServer : MonoBehaviour
     // You can override this method
     public virtual string Respond(HttpListenerRequest request)
     {
-        string name = request.Url.LocalPath;
-        string[] args = new string[] { };
-
-        if (name.Contains(":"))
-        {
-            name = request.Url.LocalPath.Split(':')[0];
-            args = request.Url.LocalPath.Split(':')[1].Split('&');
-        }
-
-        Debug.Log("Path: " + name);
-        Debug.Log("Arguments: " + args.ToString());
-
-        foreach (ManagedRequest mr in managedRequests)
-        {
-            if (mr.name == name)
-                return mr.responseFunction.Invoke(args);
-        }
-        return string.Format("<!DOCTYPE html> <html> <head> <title>Unity Webserver</title> </head> <body> <h1>Hello from your Unity project</h1> <p>Have fun!</p> </body> </html>");
+        return "";
     }
 }
